@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <style>
+
+      body{
+      background-image: linear-gradient(red, blue);
+      margin-top: 30px;
+      }
+
+      #messageArea{
+        display: none;
+      }
+      /* #newEntry {
+      position: absolute;
+      z-index: 9;
+      background-color: #f1f1f1;
+      text-align: center;
+      border: 1px solid #d3d3d3;
+      } */
+
+      .col-md-8{
+        position: relative;
+        top: 200px;
+      }
+
+      .well{
+        position: absolute;
+        top: -100px;
+        left: 0;
+        width: 300px;
+        border: 3px solid #ffffff;
+      }
+      </style>
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+      <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  </head>
+  <body>
+    <div class="container">
+        <div id="userFormArea" class="row">
+          <div class="col-md-12">
+            <form id="userForm">
+              <div class="form-group">
+                <label>Enter Username</label>
+                <input class="form-control" id="username" />
+                <br />
+                <input type="submit" class="btn btn-primary" value="Login" />
+              </div>
+            </form>
+          </div>
+        </div>
+
+          <div id="messageArea" class="row">
+              <div class="col-md-4">
+                <div class="well">
+                  <h3> Online Users</h3>
+                  <ul class = "list-group" id="users"></ul>
+                </div>
+              </div>
+              <div class="col-md-8">
+                  <div class="chat" id="chat"></div>
+
+                  <form id="messageForm">
+                    <div class="form-group">
+                      <label>Enter Message</label>
+                      <textarea class="form-control" id="message"></textarea>
+                      <br />
+                      <input type="submit" class="btn btn-primary" value="Send Message" />
+                    </div>
+                  </form>
+                </div>
+
+      </div>
+
+    </div>
+    <script>
+      $(function(){
+        var socket = io.connect();
+        var $messageForm = $('#messageForm');
+        var $message = $('#message');
+        var $chat = $('#chat');
+        var $messageArea = $('#messageArea');
+        var $userFormArea = $('#userFormArea');
+        var $userForm = $('#userForm');
+        var $users = $('#users');
+        var $username = $('username');
+
+        $messageForm.submit(function(e){
+          e.preventDefault();
+          socket.emit('send message', $message.val());
+          $message.val('');
+        });
+
+        socket.on('new message', function(data){
+          var count = 0;
+          var $item = $('<div class="well" id="entry" onmouseup="dragElement()">'+data.msg+'</div>');
+          //var $item = $('<div class="well" id="entry'+count+'"onmouseup="dragElement()">'+data.msg+'</div>');
+          $item.draggable();
+          $item.appendTo($chat);
+          count++;
+        });
+
+        $userForm.submit(function(e){
+          e.preventDefault();
+          socket.emit('new user', $username.val(), function(data){
+            if(data){
+              $userFormArea.hide();
+              $messageArea.show();
+            }
+          });
+          $username.val('');
+        });
+
+        socket.on('get users', function(data){
+          var html = '';
+          for(i=0; i<data.length; i++){
+            html += '<li class="list-group-item">'+data[i]+'</li>';
+          }
+          $users.html(html);
+        })
+
+      });
+
+      // $('div').on('click', function() {
+      //   alert($(this).attr("id"));
+      // });
+
+
+      function dragElement(){
+        var elmnt = $('#entry');
+        var divPos = elmnt.position();
+        console.log(divPos.left, divPos.top);
+      }
+
+
+  </script>
+
+  </body>
+</html>
